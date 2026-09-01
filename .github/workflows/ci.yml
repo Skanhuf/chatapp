@@ -20,6 +20,7 @@ jobs:
       - name: Go mod tidy
         run: |
           cd backend
+          go get ./...
           go mod tidy
 
       - name: Go mod download
