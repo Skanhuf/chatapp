@@ -9,11 +9,7 @@ from sqlalchemy.orm import DeclarativeBase
 from main import app
 
 # Import Base directly from models to avoid importing database.db (which creates PG engine)
-from models.models import Chat, ChatMember, Message, User  # noqa: F401
-
-
-class Base(DeclarativeBase):
-    pass
+from models.models import Base, Chat, ChatMember, Message, User  # noqa: F401
 
 
 # Use a temp file for SQLite so all connections share the same DB
@@ -35,7 +31,7 @@ async def setup_db():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def session():
+async def session(setup_db):
     """Provide a session with rollback (per-test, new connection)."""
     async with _test_engine.connect() as conn, conn.begin():
         s = async_sessionmaker(conn, class_=AsyncSession, expire_on_commit=False)()
