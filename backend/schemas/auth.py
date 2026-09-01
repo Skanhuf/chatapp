@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime
 
+from pydantic import BaseModel, Field
 
 # --- Auth Schemas ---
 
@@ -24,7 +23,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    status: Optional[str] = None
+    status: str | None = None
 
 
 class LoginResponse(BaseModel):
@@ -52,8 +51,8 @@ class ChatMemberResponse(BaseModel):
     id: int
     username: str
     email: str
-    status: Optional[str] = None
-    created_at: Optional[datetime] = None
+    status: str | None = None
+    created_at: datetime | None = None
 
 
 class ChatResponse(BaseModel):
@@ -61,7 +60,7 @@ class ChatResponse(BaseModel):
     name: str
     type: str
     created_by: int
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 # --- Message Schemas ---
@@ -76,9 +75,9 @@ class MessageResponse(BaseModel):
     chat_id: int
     user_id: int
     content: str
-    file_url: Optional[str] = None
-    created_at: Optional[datetime] = None
-    username: Optional[str] = None
+    file_url: str | None = None
+    created_at: datetime | None = None
+    username: str | None = None
 
 
 # --- WebSocket Schemas ---

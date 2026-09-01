@@ -1,9 +1,10 @@
 import json
-from fastapi import WebSocket, WebSocketDisconnect
 
+from fastapi import WebSocket
+
+from models.models import Message
 from services.chat_service import ChatService
 from services.message_service import MessageService
-from models.models import Message
 
 
 class WSClient:

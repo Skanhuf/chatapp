@@ -1,15 +1,14 @@
 import pytest
-from httpx import AsyncClient
 
 
 class TestAuthService:
     """Tests for auth service layer."""
 
     async def test_register_success(self, session):
+        import bcrypt
+
         from repositories.user_repo import UserRepository
         from services.auth_service import AuthService
-        from models.models import User
-        import bcrypt
 
         user_repo = UserRepository(session)
         auth_service = AuthService(user_repo)

@@ -1,14 +1,13 @@
-import pytest
-import pytest_asyncio
 import asyncio
 import tempfile
-import os
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-from main import app
+import pytest
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from database.db import Base, get_db
-
+from main import app
 
 # Use a temp SQLite file for testing
 TEST_DB_PATH = tempfile.mktemp(suffix=".db")
@@ -63,8 +62,9 @@ async def client(session):
 @pytest_asyncio.fixture
 async def test_user(session):
     """Create a test user and return it."""
-    from models.models import User
     import bcrypt
+
+    from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
@@ -84,8 +84,9 @@ async def test_user(session):
 @pytest_asyncio.fixture
 async def test_user_pending(session):
     """Create a pending test user."""
-    from models.models import User
     import bcrypt
+
+    from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
@@ -105,8 +106,9 @@ async def test_user_pending(session):
 @pytest_asyncio.fixture
 async def another_user(session):
     """Create another test user."""
-    from models.models import User
     import bcrypt
+
+    from models.models import User
 
     password_hash = bcrypt.hashpw(b"anotherpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(

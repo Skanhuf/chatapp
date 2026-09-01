@@ -1,6 +1,6 @@
-from repositories.message_repo import MessageRepository
-from repositories.chat_repo import ChatRepository
 from models.models import Message
+from repositories.chat_repo import ChatRepository
+from repositories.message_repo import MessageRepository
 
 
 class MessageService:

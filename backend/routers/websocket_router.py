@@ -1,15 +1,13 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request, HTTPException, Depends
-
-from schemas.auth import WSMessage
-from services.chat_service import ChatService
-from services.message_service import MessageService
-from repositories.user_repo import UserRepository
-from repositories.chat_repo import ChatRepository
-from repositories.message_repo import MessageRepository
-from handlers.websocket import WSHub, WebSocketHandler
-from database.db import get_db
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.db import get_db
+from handlers.websocket import WebSocketHandler, WSHub
+from repositories.chat_repo import ChatRepository
+from repositories.message_repo import MessageRepository
+from repositories.user_repo import UserRepository
+from services.chat_service import ChatService
+from services.message_service import MessageService
 
 router = APIRouter(tags=["websocket"])
 
