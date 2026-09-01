@@ -4,7 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import get_db
 from repositories.user_repo import UserRepository
-from schemas.auth import LoginRequest, LoginResponse, ProfileUpdateRequest, RegisterRequest, UserResponse
+from schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    ProfileUpdateRequest,
+    RegisterRequest,
+    UserResponse,
+)
 from services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])

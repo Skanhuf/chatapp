@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -5,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from database.db import Base, get_db
 from main import app
 
-# Use SQLite for tests (fast, no external dependencies)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Use a temp file for SQLite so all connections share the same DB
+_TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "chatapp_test.db")
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{_TEST_DB_PATH}"
 
 _test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 

@@ -16,7 +16,6 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
     # Shutdown: cleanup
-    pass
 
 
 app = FastAPI(title="ChatAPP API", lifespan=lifespan)

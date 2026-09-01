@@ -4,7 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.db import get_db
 from repositories.chat_repo import ChatRepository
 from repositories.user_repo import UserRepository
-from schemas.auth import AddMemberRequest, ChatMemberResponse, ChatResponse, CreateChatRequest, CreateDirectChatRequest
+from schemas.auth import (
+    AddMemberRequest,
+    ChatMemberResponse,
+    ChatResponse,
+    CreateChatRequest,
+    CreateDirectChatRequest,
+)
 from services.chat_service import ChatService
 
 router = APIRouter(prefix="/chats", tags=["chats"])
