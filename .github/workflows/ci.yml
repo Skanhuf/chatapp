@@ -17,10 +17,10 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Go mod download
+      - name: Build Go modules (generates go.sum)
         run: |
           cd backend
-          go mod download
+          go build ./...
 
       - name: Backend lint
         run: |
