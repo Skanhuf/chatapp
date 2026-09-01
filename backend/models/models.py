@@ -38,7 +38,7 @@ class ChatMember(Base):
     __tablename__ = "chat_members"
 
     chat_id = Column(Integer, ForeignKey("chats.id"), primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     role = Column(String, nullable=False, default="member")
 
     chat = relationship("Chat", back_populates="members")
