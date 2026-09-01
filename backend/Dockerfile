@@ -2,6 +2,9 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
+# Install gcc for CGO (SQLite)
+RUN apk add --no-cache gcc musl-dev
+
 COPY go.mod go.sum ./
 RUN go mod download
 
