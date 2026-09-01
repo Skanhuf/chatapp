@@ -7,70 +7,64 @@ on:
     branches: [main]
 
 jobs:
-  generate-gosum:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Generate go.sum
-        run: |
-          cd backend
-          go mod tidy
-
-      - name: Commit go.sum
-        run: |
-          cd backend
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add go.sum
-          git commit -m "Add go.sum" || echo "No changes"
-          git push || echo "Already up to date"
-
   lint:
     runs-on: ubuntu-latest
-    needs: [generate-gosum]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          go-version: '1.23'
+          python-version: '3.12'
 
-      - name: Backend lint
+      - name: Install dependencies
         run: |
           cd backend
-          go vet ./...
+          pip install --no-cache-dir ruff
+
+      - name: Lint with ruff
+        run: |
+          cd backend
+          ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest tests/ -v
 
   build:
     runs-on: ubuntu-latest
-    needs: [lint]
+    needs: [lint, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          go-version: '1.23'
+          python-version: '3.12'
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Backend build
+      - name: Install dependencies
         run: |
           cd backend
-          go build -o main .
+          pip install --no-cache-dir .
 
-      - name: Frontend build
+      - name: Build frontend
         run: |
           cd frontend
           npm ci

@@ -1,19 +1,20 @@
-FROM golang:1.23-alpine AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# Install gcc for CGO (SQLite)
-RUN apk add --no-cache gcc musl-dev
-
-COPY go.mod go.sum ./
-RUN go mod download
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 COPY . .
-RUN CGO_ENABLED=1 GOOS=linux go build -o main .
+RUN pip install --no-cache-dir --prefix=/install .
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/main .
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY --from=builder /app /app
+
 EXPOSE 3001
-CMD ["./main"]
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001"]

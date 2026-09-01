@@ -7,11 +7,11 @@ stages:
 # Backend linting
 lint-backend:
   stage: lint
-  image: golang:1.23-alpine
+  image: python:3.12-slim
   before_script:
-    - cd backend && go mod download
+    - cd backend && pip install --no-cache-dir ruff
   script:
-    - go vet ./...
+    - ruff check .
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -19,18 +19,11 @@ lint-backend:
 # Backend tests
 test-backend:
   stage: test
-  image: golang:1.23-alpine
-  services:
-    - name: postgres:16-alpine
-      alias: postgres-test
-  variables:
-    POSTGRES_USER: testuser
-    POSTGRES_PASSWORD: testpass
-    POSTGRES_DB: testdb
+  image: python:3.12-slim
   before_script:
-    - cd backend && go mod download
+    - cd backend && pip install --no-cache-dir -r requirements.txt
   script:
-    - go test -v -cover ./internal/...
+    - cd backend && pytest tests/ -v
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
