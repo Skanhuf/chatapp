@@ -11,7 +11,7 @@ class ChatService:
     async def get_chats(self, user_id: int) -> list[Chat]:
         return await self.chat_repo.get_by_user_id(user_id)
 
-    async def create_chat(self, name: str, created_by: int, member_ids: list[int] = None) -> Chat:
+    async def create_chat(self, name: str, created_by: int, member_ids: list[int] | None = None) -> Chat:
         if member_ids is None:
             member_ids = []
 

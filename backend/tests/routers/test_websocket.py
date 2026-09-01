@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from httpx import AsyncClient
 
 
@@ -8,22 +10,15 @@ class TestWebSocket:
         # WebSocket without userId should close
         try:
             await client.websocket_connect("/ws")
-        except Exception:
-            pass  # Expected to fail
+        except Exception as exc:
+            # Expected to fail
+            assert "Missing userId" in str(exc) or "4001" in str(exc)
 
     async def test_websocket_connect_invalid_user_id(self, client: AsyncClient):
         # WebSocket with invalid userId should close
-        try:
-            async with client.websocket_connect("/ws?userId=invalid") as ws:
-                pass
-        except Exception:
-            pass  # Expected to fail
+        with suppress(Exception):
+            await client.websocket_connect("/ws?userId=invalid")
 
     async def test_websocket_connect_with_user_id(self, client: AsyncClient, test_user):
-        try:
-            async with client.websocket_connect(f"/ws?userId={test_user.id}") as ws:
-                # Connection should succeed
-                pass
-        except Exception:
-            # Connection might close, which is also valid
-            pass
+        with suppress(Exception):
+            await client.websocket_connect(f"/ws?userId={test_user.id}")

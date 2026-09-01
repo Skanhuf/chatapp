@@ -1,3 +1,13 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "S", "BLE", "A", "C4", "DTZ", "T10", "T20", "PIE", "TID", "Q", "RSE", "RET", "FLY", "PERF", "FURB"]
+ignore = ["B008", "S110", "BLE001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["S101", "S311"]

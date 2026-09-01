@@ -4,9 +4,17 @@ import tempfile
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
-from database.db import Base, get_db
 from main import app
+
+# Import Base directly from models to avoid importing database.db (which creates PG engine)
+from models.models import Chat, ChatMember, Message, User  # noqa: F401
+
+
+class Base(DeclarativeBase):
+    pass
+
 
 # Use a temp file for SQLite so all connections share the same DB
 _TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "chatapp_test.db")
@@ -41,13 +49,10 @@ async def session():
 async def test_user(session):
     import bcrypt
 
-    from models.models import User
-
-    password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
         username="testuser",
         email="test@example.com",
-        password_hash=password_hash,
+        password_hash=bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8"),
         status="approved",
     )
     session.add(user)
@@ -60,13 +65,10 @@ async def test_user(session):
 async def test_user_pending(session):
     import bcrypt
 
-    from models.models import User
-
-    password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
         username="pendinguser",
         email="pending@example.com",
-        password_hash=password_hash,
+        password_hash=bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8"),
         status="pending",
     )
     session.add(user)
@@ -79,13 +81,10 @@ async def test_user_pending(session):
 async def another_user(session):
     import bcrypt
 
-    from models.models import User
-
-    password_hash = bcrypt.hashpw(b"anotherpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
         username="anotheruser",
         email="another@example.com",
-        password_hash=password_hash,
+        password_hash=bcrypt.hashpw(b"anotherpass123", bcrypt.gensalt()).decode("utf-8"),
         status="approved",
     )
     session.add(user)
@@ -97,6 +96,13 @@ async def another_user(session):
 @pytest_asyncio.fixture(scope="function")
 async def client(session, test_user):
     """Provide an HTTP test client."""
+    import main
+
+    # Mock init_db to avoid PostgreSQL connection at startup
+    main.init_db = lambda: None
+
+    from database.db import get_db
+
     async def override_get_db():
         yield session
 
