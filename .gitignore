@@ -5,7 +5,6 @@ frontend/.env
 
 # Dependencies
 node_modules/
-backend/go.sum
 
 # Build outputs
 backend/main
