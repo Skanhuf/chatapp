@@ -1,18 +1,10 @@
-from httpx import AsyncClient, Cookies
-
-
-def _set_cookie(client: AsyncClient, user_id: int):
-    """Helper to set userId cookie on client."""
-    cookies = Cookies()
-    cookies.set("userId", str(user_id), domain="test")
-    client.cookies = cookies
+from httpx import AsyncClient
 
 
 class TestMessages:
     """Tests for message endpoints."""
 
     async def test_send_message(self, client: AsyncClient, test_user, another_user):
-        _set_cookie(client, test_user.id)
         create_resp = await client.post("/api/chats", json={
             "name": "Test Group",
             "member_ids": [another_user.id]
@@ -29,7 +21,6 @@ class TestMessages:
         assert data["chat_id"] == chat_id
 
     async def test_get_messages(self, client: AsyncClient, test_user, another_user):
-        _set_cookie(client, test_user.id)
         create_resp = await client.post("/api/chats", json={
             "name": "Test Group",
             "member_ids": [another_user.id]
@@ -71,7 +62,6 @@ class TestLeaveChat:
     """Tests for leaving chats."""
 
     async def test_leave_chat(self, client: AsyncClient, test_user, another_user):
-        _set_cookie(client, test_user.id)
         create_resp = await client.post("/api/chats", json={
             "name": "Test Group",
             "member_ids": [another_user.id]

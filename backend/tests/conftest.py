@@ -90,7 +90,7 @@ async def another_user(session):
 
 @pytest_asyncio.fixture(scope="function")
 async def client(session, test_user):
-    """Provide an HTTP test client."""
+    """Provide an HTTP test client with userId cookie."""
     import main
 
     # Mock init_db to avoid PostgreSQL connection at startup
@@ -104,7 +104,9 @@ async def client(session, test_user):
     app.dependency_overrides[get_db] = override_get_db
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    # Set userId cookie on client
+    cookies = {"userId": str(test_user.id)}
+    async with AsyncClient(transport=transport, base_url="http://test", cookies=cookies) as ac:
         yield ac
 
     app.dependency_overrides.clear()

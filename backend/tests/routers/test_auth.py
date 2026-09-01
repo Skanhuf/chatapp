@@ -1,11 +1,4 @@
-from httpx import AsyncClient, Cookies
-
-
-def _set_cookie(client: AsyncClient, user_id: int):
-    """Helper to set userId cookie on client."""
-    cookies = Cookies()
-    cookies.set("userId", str(user_id), domain="test")
-    client.cookies = cookies
+from httpx import AsyncClient
 
 
 class TestAuthRegister:
@@ -86,7 +79,6 @@ class TestAuthProfile:
     """Tests for auth profile endpoints."""
 
     async def test_get_me(self, client: AsyncClient, test_user):
-        _set_cookie(client, test_user.id)
         response = await client.get("/api/auth/me")
         assert response.status_code == 200
         data = response.json()
@@ -98,7 +90,6 @@ class TestAuthProfile:
         assert response.status_code == 401
 
     async def test_update_profile(self, client: AsyncClient, test_user):
-        _set_cookie(client, test_user.id)
         response = await client.put("/api/auth/profile", json={
             "email": "newemail@example.com"
         })
@@ -106,7 +97,6 @@ class TestAuthProfile:
         assert response.json()["message"] == "Profile updated"
 
     async def test_search_users(self, client: AsyncClient, test_user, another_user):
-        _set_cookie(client, test_user.id)
         response = await client.get("/api/auth/search?q=test")
         assert response.status_code == 200
         data = response.json()

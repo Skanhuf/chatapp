@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import get_db
@@ -16,9 +16,12 @@ from services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def get_user_id_from_cookie(user_id: str | None = Depends(lambda x: x)) -> int:
+async def get_user_id_from_cookie(request: Request) -> int:
     """Extract user ID from cookie."""
-    raise HTTPException(status_code=401, detail="unauthorized")
+    user_id = request.cookies.get("userId")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    return int(user_id)
 
 
 @router.post("/register", status_code=201)
