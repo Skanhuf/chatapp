@@ -1,41 +1,59 @@
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 
-class User:
-    def __init__(self, id: int, username: str, email: str, password_hash: str,
-                 status: str, created_at: datetime):
-        self.id = id
-        self.username = username
-        self.email = email
-        self.password_hash = password_hash
-        self.status = status  # pending, approved, blocked
-        self.created_at = created_at
+class Base(DeclarativeBase):
+    pass
 
 
-class Chat:
-    def __init__(self, id: int, name: str, chat_type: str, created_by: int,
-                 created_at: datetime):
-        self.id = id
-        self.name = name
-        self.type = chat_type  # group, direct
-        self.created_by = created_by
-        self.created_at = created_at
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, nullable=False)
+    password_hash = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="pending")  # pending, approved, blocked
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    messages = relationship("Message", back_populates="user")
+    chats = relationship("ChatMember", back_populates="user")
 
 
-class ChatMember:
-    def __init__(self, chat_id: int, user_id: int, role: str):
-        self.chat_id = chat_id
-        self.user_id = user_id
-        self.role = role  # admin, member
+class Chat(Base):
+    __tablename__ = "chats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    chat_type = Column(String, nullable=False)  # group, direct
+    created_by = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    members = relationship("ChatMember", back_populates="chat")
+    messages = relationship("Message", back_populates="chat")
 
 
-class Message:
-    def __init__(self, id: int, chat_id: int, user_id: int, content: str,
-                 file_url: str | None, created_at: datetime, username: str | None):
-        self.id = id
-        self.chat_id = chat_id
-        self.user_id = user_id
-        self.content = content
-        self.file_url = file_url
-        self.created_at = created_at
-        self.username = username
+class ChatMember(Base):
+    __tablename__ = "chat_members"
+
+    chat_id = Column(Integer, ForeignKey("chats.id"), primary_key=True)
+    user_id = Column(Integer, nullable=False, primary_key=True)
+    role = Column(String, nullable=False, default="member")  # admin, member
+
+    chat = relationship("Chat", back_populates="members")
+    user = relationship("User", back_populates="chats")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chat_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    file_url = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="messages")
+    chat = relationship("Chat", back_populates="messages")

@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends, Request
+
+from schemas.auth import (
+    CreateChatRequest, CreateDirectChatRequest,
+    AddMemberRequest, ChatResponse, ChatMemberResponse
+)
+from services.chat_service import ChatService
+from services.message_service import MessageService
+from repositories.user_repo import UserRepository
+from repositories.chat_repo import ChatRepository
+from database.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import get_db
-from repositories.chat_repo import ChatRepository
-from repositories.user_repo import UserRepository
-from schemas.auth import AddMemberRequest, ChatMemberResponse, ChatResponse, CreateChatRequest, CreateDirectChatRequest
-from services.chat_service import ChatService
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 
@@ -31,7 +36,7 @@ async def get_chats(
     chats = await chat_service.get_chats(user_id)
     return [
         ChatResponse(
-            id=c.id, name=c.name, type=c.type,
+            id=c.id, name=c.name, type=c.chat_type,
             created_by=c.created_by, created_at=c.created_at
         )
         for c in chats
@@ -52,10 +57,10 @@ async def create_chat(
     try:
         chat = await chat_service.create_chat(req.name, user_id, req.member_ids)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return ChatResponse(
-        id=chat.id, name=chat.name, type=chat.type,
+        id=chat.id, name=chat.name, type=chat.chat_type,
         created_by=chat.created_by, created_at=chat.created_at
     )
 
@@ -74,7 +79,7 @@ async def create_direct_chat(
     try:
         chat_id = await chat_service.create_direct_chat(user_id, req.participant_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return {"chat_id": chat_id}
 
@@ -115,7 +120,7 @@ async def add_member(
     try:
         await chat_service.add_member(chat_id, req.user_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return {"message": "Member added"}
 
@@ -138,7 +143,7 @@ async def remove_member(
     try:
         await chat_service.remove_member(chat_id, member_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return {"message": "Member removed"}
 
@@ -157,7 +162,7 @@ async def leave_chat(
     try:
         await chat_service.remove_member(chat_id, user_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return {"message": "Left chat"}
 
@@ -186,7 +191,7 @@ async def approve_user(
     try:
         await user_repo.approve(user_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return {"message": "User approved"}
 
 
@@ -199,5 +204,5 @@ async def block_user(
     try:
         await user_repo.block(user_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return {"message": "User blocked"}

@@ -1,4 +1,12 @@
-from httpx import AsyncClient
+import pytest
+from httpx import AsyncClient, Cookies
+
+
+def _set_cookie(client: AsyncClient, user_id: int):
+    """Helper to set userId cookie on client."""
+    cookies = Cookies()
+    cookies.set("userId", str(user_id), domain="test")
+    client.cookies = cookies
 
 
 class TestAuthRegister:
@@ -52,8 +60,6 @@ class TestAuthLogin:
         assert response.status_code == 200
         data = response.json()
         assert data["username"] == "testuser"
-        # Cookie should be set in response
-        assert "userId" in client.cookies or response.cookies
 
     async def test_login_wrong_password(self, client: AsyncClient, test_user):
         response = await client.post("/api/auth/login", json={
@@ -81,14 +87,7 @@ class TestAuthProfile:
     """Tests for auth profile endpoints."""
 
     async def test_get_me(self, client: AsyncClient, test_user):
-        # Set cookie via transport
-        client._transport._transport._pool.default_pool_kwargs = {"cookies": {"userId": str(test_user.id)}}
-        # Use a session with cookie
-        from httpx import Cookies
-        cookies = Cookies()
-        cookies.set("userId", str(test_user.id), domain="test")
-        client.cookies = cookies
-
+        _set_cookie(client, test_user.id)
         response = await client.get("/api/auth/me")
         assert response.status_code == 200
         data = response.json()
@@ -100,11 +99,7 @@ class TestAuthProfile:
         assert response.status_code == 401
 
     async def test_update_profile(self, client: AsyncClient, test_user):
-        from httpx import Cookies
-        cookies = Cookies()
-        cookies.set("userId", str(test_user.id), domain="test")
-        client.cookies = cookies
-
+        _set_cookie(client, test_user.id)
         response = await client.put("/api/auth/profile", json={
             "email": "newemail@example.com"
         })
@@ -112,11 +107,7 @@ class TestAuthProfile:
         assert response.json()["message"] == "Profile updated"
 
     async def test_search_users(self, client: AsyncClient, test_user, another_user):
-        from httpx import Cookies
-        cookies = Cookies()
-        cookies.set("userId", str(test_user.id), domain="test")
-        client.cookies = cookies
-
+        _set_cookie(client, test_user.id)
         response = await client.get("/api/auth/search?q=test")
         assert response.status_code == 200
         data = response.json()

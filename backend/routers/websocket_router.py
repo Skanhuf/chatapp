@@ -1,23 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
-from sqlalchemy.ext.asyncio import AsyncSession
+import json
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request, HTTPException, Depends
 
-from database.db import get_db
-from handlers.websocket import WebSocketHandler, WSHub
-from repositories.chat_repo import ChatRepository
-from repositories.message_repo import MessageRepository
-from repositories.user_repo import UserRepository
 from services.chat_service import ChatService
 from services.message_service import MessageService
+from repositories.user_repo import UserRepository
+from repositories.chat_repo import ChatRepository
+from repositories.message_repo import MessageRepository
+from handlers.websocket import WSHub, WebSocketHandler
+from database.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 router = APIRouter(tags=["websocket"])
-
-
-async def get_user_id(request: Request) -> int:
-    """Get user ID from cookie."""
-    user_id = request.cookies.get("userId")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="unauthorized")
-    return int(user_id)
 
 
 # Hub is shared across all WebSocket connections
@@ -57,7 +51,6 @@ async def websocket_endpoint(
     try:
         while True:
             raw_data = await websocket.receive_text()
-            import json
             data = json.loads(raw_data)
 
             msg_type = data.get("type")

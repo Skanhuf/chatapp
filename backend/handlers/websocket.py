@@ -1,17 +1,15 @@
 import json
+from fastapi import WebSocket, WebSocketDisconnect
 
-from fastapi import WebSocket
-
-from models.models import Message
 from services.chat_service import ChatService
 from services.message_service import MessageService
+from models.models import Message
 
 
 class WSClient:
     def __init__(self, websocket: WebSocket, user_id: int):
         self.websocket = websocket
         self.user_id = user_id
-        self.send_queue: list[bytes] = []
 
 
 class WSHub:
@@ -28,17 +26,6 @@ class WSHub:
 
     def add_broadcast(self, chat_id: int, data: bytes):
         self.broadcast_queue.append((chat_id, data))
-
-    async def process_broadcasts(self):
-        """Process queued broadcasts and send to relevant clients."""
-        while self.broadcast_queue:
-            chat_id, data = self.broadcast_queue.pop(0)
-            # Broadcast to all connected clients (frontend will filter by chat_id)
-            for client in list(self.clients.values()):
-                try:
-                    await client.websocket.send_bytes(data)
-                except Exception:
-                    self.unregister(client.user_id)
 
 
 class WebSocketHandler:
@@ -57,9 +44,8 @@ class WebSocketHandler:
 
     async def handle_message(self, user_id: int, chat_id: int, content: str):
         msg = Message(
-            id=0, chat_id=chat_id, user_id=user_id,
-            content=content, file_url=None,
-            created_at=None, username=None
+            chat_id=chat_id, user_id=user_id,
+            content=content,
         )
 
         await self.message_service.send_message(msg)

@@ -19,12 +19,10 @@ class AuthService:
         password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         user = User(
-            id=0,
             username=username,
             email=email,
             password_hash=password_hash,
             status="pending",
-            created_at=None
         )
 
         return await self.user_repo.create(user)

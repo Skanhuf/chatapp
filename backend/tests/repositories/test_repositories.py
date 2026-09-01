@@ -1,20 +1,21 @@
+import pytest
+from httpx import AsyncClient
 
 
 class TestUserRepository:
     """Tests for user repository."""
 
     async def test_create_user(self, session):
-        import bcrypt
-
-        from models.models import User
         from repositories.user_repo import UserRepository
+        from models.models import User
+        import bcrypt
 
         user_repo = UserRepository(session)
         password_hash = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode("utf-8")
 
         user = User(
-            id=0, username="repo_user", email="repo@test.com",
-            password_hash=password_hash, status="approved", created_at=None
+            username="repo_user", email="repo@test.com",
+            password_hash=password_hash, status="approved",
         )
         created = await user_repo.create(user)
         assert created.id > 0
@@ -66,13 +67,13 @@ class TestChatRepository:
     """Tests for chat repository."""
 
     async def test_create_chat(self, session, test_user):
-        from models.models import Chat
         from repositories.chat_repo import ChatRepository
+        from models.models import Chat
 
         chat_repo = ChatRepository(session)
         chat = Chat(
-            id=0, name="Test Chat", chat_type="group",
-            created_by=test_user.id, created_at=None
+            name="Test Chat", chat_type="group",
+            created_by=test_user.id,
         )
         created = await chat_repo.create(chat)
         assert created.id > 0
@@ -90,14 +91,13 @@ class TestMessageRepository:
     """Tests for message repository."""
 
     async def test_save_message(self, session, test_user):
-        from models.models import Message
         from repositories.message_repo import MessageRepository
+        from models.models import Message
 
         message_repo = MessageRepository(session)
         msg = Message(
-            id=0, chat_id=1, user_id=test_user.id,
-            content="Test message", file_url=None,
-            created_at=None, username=None
+            chat_id=1, user_id=test_user.id,
+            content="Test message",
         )
         saved = await message_repo.save(msg)
         assert saved.id > 0

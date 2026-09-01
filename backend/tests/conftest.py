@@ -1,13 +1,14 @@
-import asyncio
-import tempfile
-
 import pytest
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+import asyncio
+import tempfile
+import os
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-from database.db import Base, get_db
 from main import app
+from database.db import Base, get_db
+
 
 # Use a temp SQLite file for testing
 TEST_DB_PATH = tempfile.mktemp(suffix=".db")
@@ -63,17 +64,14 @@ async def client(session):
 async def test_user(session):
     """Create a test user and return it."""
     import bcrypt
-
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
-        id=0,
         username="testuser",
         email="test@example.com",
         password_hash=password_hash,
         status="approved",
-        created_at=None
     )
     session.add(user)
     await session.commit()
@@ -85,17 +83,14 @@ async def test_user(session):
 async def test_user_pending(session):
     """Create a pending test user."""
     import bcrypt
-
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
-        id=0,
         username="pendinguser",
         email="pending@example.com",
         password_hash=password_hash,
         status="pending",
-        created_at=None
     )
     session.add(user)
     await session.commit()
@@ -107,17 +102,14 @@ async def test_user_pending(session):
 async def another_user(session):
     """Create another test user."""
     import bcrypt
-
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"anotherpass123", bcrypt.gensalt()).decode("utf-8")
     user = User(
-        id=0,
         username="anotheruser",
         email="another@example.com",
         password_hash=password_hash,
         status="approved",
-        created_at=None
     )
     session.add(user)
     await session.commit()

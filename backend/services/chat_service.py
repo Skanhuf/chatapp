@@ -1,6 +1,6 @@
-from models.models import Chat, User
 from repositories.chat_repo import ChatRepository
 from repositories.user_repo import UserRepository
+from models.models import Chat, User
 
 
 class ChatService:
@@ -16,8 +16,8 @@ class ChatService:
             member_ids = []
 
         chat = Chat(
-            id=0, name=name, chat_type="group",
-            created_by=created_by, created_at=None
+            name=name, chat_type="group",
+            created_by=created_by,
         )
 
         chat = await self.chat_repo.create(chat)
