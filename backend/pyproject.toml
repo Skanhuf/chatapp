@@ -1,14 +1,3 @@
-[tool.ruff]
-line-length = 120
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP"]
-ignore = ["E501", "B008", "B904", "F841"]
-
-[tool.ruff.lint.isort]
-combine-as-imports = true
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
