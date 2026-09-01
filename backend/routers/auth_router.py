@@ -1,20 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, Response
-from typing import Optional
 
-from schemas.auth import (
-    RegisterRequest, LoginRequest, ProfileUpdateRequest,
-    UserResponse, LoginResponse
-)
-from services.auth_service import AuthService
-from repositories.user_repo import UserRepository
-from database.db import get_db
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.db import get_db
+from repositories.user_repo import UserRepository
+from schemas.auth import LoginRequest, LoginResponse, ProfileUpdateRequest, RegisterRequest, UserResponse
+from services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def get_user_id_from_cookie(user_id: Optional[str] = Depends(lambda x: x)) -> int:
+def get_user_id_from_cookie(user_id: str | None = Depends(lambda x: x)) -> int:
     """Extract user ID from cookie."""
     raise HTTPException(status_code=401, detail="unauthorized")
 

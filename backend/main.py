@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database.db import init_db, Base  # noqa: F401
+from database.db import Base, init_db  # noqa: F401
 from routers.auth_router import router as auth_router
 from routers.chat_router import router as chat_router
 from routers.message_router import router as message_router

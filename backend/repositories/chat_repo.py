@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete, and_
+from sqlalchemy import and_, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.models import Chat, ChatMember, User

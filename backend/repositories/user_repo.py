@@ -1,7 +1,7 @@
-from sqlalchemy import select, update, insert, delete, and_
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.models import User, Chat, ChatMember, Message
+from models.models import User
 
 
 class UserRepository:

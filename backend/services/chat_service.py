@@ -1,6 +1,6 @@
+from models.models import Chat, User
 from repositories.chat_repo import ChatRepository
 from repositories.user_repo import UserRepository
-from models.models import Chat, User
 
 
 class ChatService:

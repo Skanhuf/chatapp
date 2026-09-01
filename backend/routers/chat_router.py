@@ -1,16 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
-
-from schemas.auth import (
-    CreateChatRequest, CreateDirectChatRequest,
-    AddMemberRequest, ChatResponse, ChatMemberResponse
-)
-from services.chat_service import ChatService
-from services.message_service import MessageService
-from repositories.user_repo import UserRepository
-from repositories.chat_repo import ChatRepository
-from database.db import get_db
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.db import get_db
+from repositories.chat_repo import ChatRepository
+from repositories.user_repo import UserRepository
+from schemas.auth import AddMemberRequest, ChatMemberResponse, ChatResponse, CreateChatRequest, CreateDirectChatRequest
+from services.chat_service import ChatService
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 

@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
-
-from schemas.auth import SendMessageRequest, MessageResponse
-from services.message_service import MessageService
-from repositories.message_repo import MessageRepository
-from repositories.chat_repo import ChatRepository
-from models.models import Message
-from database.db import get_db
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.db import get_db
+from models.models import Message
+from repositories.chat_repo import ChatRepository
+from repositories.message_repo import MessageRepository
+from schemas.auth import MessageResponse, SendMessageRequest
+from services.message_service import MessageService
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 

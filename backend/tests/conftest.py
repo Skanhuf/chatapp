@@ -1,17 +1,14 @@
-import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from main import app
 from database.db import Base, get_db
-
+from main import app
 
 # PostgreSQL test database
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/chatapp_test"
 
 _engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-_test_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -27,14 +24,14 @@ async def setup_db():
 
 @pytest_asyncio.fixture
 async def session():
-    """Provide a session with rollback."""
+    """Provide a session with rollback (per-test, isolated connection)."""
     async with _engine.connect() as conn:
-        await conn.begin()
-        s = _test_session(bind=conn)
-        try:
-            yield s
-        finally:
-            await s.close()
+        async with conn.begin():
+            session = async_sessionmaker(conn, class_=AsyncSession, expire_on_commit=False)()
+            try:
+                yield session
+            finally:
+                await session.close()
 
 
 @pytest_asyncio.fixture
@@ -55,6 +52,7 @@ async def client(session):
 @pytest_asyncio.fixture
 async def test_user(session):
     import bcrypt
+
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
@@ -73,6 +71,7 @@ async def test_user(session):
 @pytest_asyncio.fixture
 async def test_user_pending(session):
     import bcrypt
+
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
@@ -91,6 +90,7 @@ async def test_user_pending(session):
 @pytest_asyncio.fixture
 async def another_user(session):
     import bcrypt
+
     from models.models import User
 
     password_hash = bcrypt.hashpw(b"anotherpass123", bcrypt.gensalt()).decode("utf-8")

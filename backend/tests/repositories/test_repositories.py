@@ -1,14 +1,13 @@
-import pytest
-from httpx import AsyncClient
 
 
 class TestUserRepository:
     """Tests for user repository."""
 
     async def test_create_user(self, session):
-        from repositories.user_repo import UserRepository
-        from models.models import User
         import bcrypt
+
+        from models.models import User
+        from repositories.user_repo import UserRepository
 
         user_repo = UserRepository(session)
         password_hash = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode("utf-8")
@@ -67,8 +66,8 @@ class TestChatRepository:
     """Tests for chat repository."""
 
     async def test_create_chat(self, session, test_user):
-        from repositories.chat_repo import ChatRepository
         from models.models import Chat
+        from repositories.chat_repo import ChatRepository
 
         chat_repo = ChatRepository(session)
         chat = Chat(
@@ -91,8 +90,8 @@ class TestMessageRepository:
     """Tests for message repository."""
 
     async def test_save_message(self, session, test_user):
-        from repositories.message_repo import MessageRepository
         from models.models import Message
+        from repositories.message_repo import MessageRepository
 
         message_repo = MessageRepository(session)
         msg = Message(
