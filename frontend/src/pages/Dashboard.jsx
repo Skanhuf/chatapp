@@ -50,8 +50,12 @@ export default function Dashboard() {
   }
 
   const fetchUsers = async () => {
-    const res = await api.get('/auth/search?q=')
-    setUsers(res.data)
+    try {
+      const res = await api.get('/auth/search?q=')
+      setUsers(res.data || [])
+    } catch (e) {
+      console.log('Error fetching users:', e)
+    }
   }
 
   const createChat = async () => {

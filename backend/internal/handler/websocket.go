@@ -4,7 +4,9 @@ import (
 	"chatapp/internal/model"
 	"chatapp/internal/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -69,8 +71,10 @@ type WebSocketHandler struct {
 }
 
 func NewWebSocketHandler(chatService *service.ChatService, messageService *service.MessageService, userRepo interface{}) *WebSocketHandler {
+	hub := NewWSHub()
+	go hub.Run() // Start hub in background
 	return &WebSocketHandler{
-		hub:            NewWSHub(),
+		hub:            hub,
 		chatService:    chatService,
 		messageService: messageService,
 	}
@@ -83,8 +87,9 @@ func (h *WebSocketHandler) ServeWebSocket(c *gin.Context) {
 	}
 
 	// Get user ID from query
-	userID := c.Query("userId")
-	if userID == "" {
+	userIDStr := c.Query("userId")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil || userID == 0 {
 		conn.Close()
 		return
 	}
@@ -92,7 +97,7 @@ func (h *WebSocketHandler) ServeWebSocket(c *gin.Context) {
 	client := &WSClient{
 		conn:   conn,
 		send:   make(chan []byte, 256),
-		userID: 0, // TODO: parse userID
+		userID: userID,
 	}
 
 	h.hub.register <- client
@@ -125,8 +130,8 @@ func (h *WebSocketHandler) readPump(client *WSClient) {
 		}
 
 		var msg struct {
-			Type   string `json:"type"`
-			ChatID int    `json:"chat_id"`
+			Type    string `json:"type"`
+			ChatID  int    `json:"chat_id"`
 			Content string `json:"content"`
 		}
 		if err := json.Unmarshal(message, &msg); err != nil {
@@ -141,6 +146,12 @@ func (h *WebSocketHandler) readPump(client *WSClient) {
 			}
 			h.messageService.SendMessage(m)
 			m.CreatedAt = time.Now()
+
+			// Get username
+			user, _ := h.chatService.GetUserByID(client.userID)
+			if user != nil {
+				m.Username = user.Username
+			}
 
 			data, _ := json.Marshal(m)
 			h.hub.broadcast <- data

@@ -17,13 +17,21 @@ export default function ChatWindow({ chat, ws }) {
   }, [messages])
 
   const fetchMessages = async () => {
-    const res = await api.get(`/messages/${chat.id}?limit=50`)
-    setMessages(res.data)
+    try {
+      const res = await api.get(`/messages/${chat.id}?limit=50`)
+      setMessages(res.data || [])
+    } catch (e) {
+      console.log('Error fetching messages:', e)
+    }
   }
 
   const fetchMembers = async () => {
-    const res = await api.get(`/chats/${chat.id}/members`)
-    setMembers(res.data)
+    try {
+      const res = await api.get(`/chats/${chat.id}/members`)
+      setMembers(res.data || [])
+    } catch (e) {
+      console.log('Error fetching members:', e)
+    }
   }
 
   const sendMessage = async () => {
@@ -68,7 +76,7 @@ export default function ChatWindow({ chat, ws }) {
 
       {/* Messages */}
       <div style={{ flex: 1, overflow: 'auto', padding: '15px' }}>
-        {messages.map(msg => (
+        {(messages || []).map(msg => (
           <div key={msg.id} style={{
             marginBottom: '10px',
             display: 'flex',

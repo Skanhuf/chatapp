@@ -8,20 +8,15 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      api.get('/auth/me')
-        .then(res => setUser(res.data))
-        .catch(() => localStorage.removeItem('token'))
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    // Cookie is set automatically by browser, axios withCredentials handles it
+    api.get('/auth/me')
+      .then(res => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false))
   }, [])
 
   const login = async (username, password) => {
     const res = await api.post('/auth/login', { username, password })
-    localStorage.setItem('token', 'auth')
     setUser(res.data)
     return res.data
   }
@@ -31,8 +26,8 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
     setUser(null)
+    window.location.href = '/login'
   }
 
   return (

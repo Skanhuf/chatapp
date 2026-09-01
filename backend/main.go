@@ -64,6 +64,18 @@ func main() {
 	// API routes
 	api := router.Group("/api")
 	{
+		// Auth middleware - get userId from cookie
+		api.Use(func(c *gin.Context) {
+			cookie, err := c.Cookie("userId")
+			if err != nil || cookie == "" {
+				c.JSON(401, gin.H{"error": "unauthorized"})
+				c.Abort()
+				return
+			}
+			c.Set("user_id", cookie)
+			c.Next()
+		})
+
 		// Auth
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)

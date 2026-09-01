@@ -56,3 +56,7 @@ func (s *ChatService) AddMember(chatID, userID int) error {
 func (s *ChatService) RemoveMember(chatID, userID int) error {
 	return s.chatRepo.RemoveMember(chatID, userID)
 }
+
+func (s *ChatService) GetUserByID(id int) (*model.User, error) {
+	return s.userRepo.FindByID(id)
+}

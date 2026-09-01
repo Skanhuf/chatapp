@@ -2,6 +2,7 @@ package handler
 
 import (
 	"chatapp/internal/service"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Set cookie
+	c.SetCookie("userId", fmt.Sprintf("%d", user.ID), 86400, "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"id":       user.ID,
