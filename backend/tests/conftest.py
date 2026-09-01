@@ -2,7 +2,6 @@ import pytest
 import pytest_asyncio
 import asyncio
 import tempfile
-import os
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
@@ -14,10 +13,13 @@ from database.db import Base, get_db
 TEST_DB_PATH = tempfile.mktemp(suffix=".db")
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
+# Single engine shared across all fixtures
+_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+_test_sessionmaker = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
+
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Create an instance of the default event loop for the test session."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
@@ -25,29 +27,31 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_db():
-    """Create test database and tables."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    async with engine.begin() as conn:
+    """Create tables once for the entire test session."""
+    async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield engine
-    async with engine.begin() as conn:
+    yield
+    # Cleanup after all tests
+    async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
 
 
 @pytest_asyncio.fixture
 async def session():
-    """Create a test database session."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as s:
-        yield s
-    await engine.dispose()
+    """Provide a transactional rollback and yield a session."""
+    async with _engine.connect() as conn:
+        txn = await conn.begin()
+        session = _test_sessionmaker(bind=conn)
+        try:
+            yield session
+        finally:
+            await session.close()
+            await txn.rollback()
 
 
 @pytest_asyncio.fixture
 async def client(session):
-    """Create a test HTTP client."""
+    """Provide an HTTP test client."""
     async def override_get_db():
         yield session
 
