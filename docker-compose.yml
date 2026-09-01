@@ -1,32 +1,15 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: chat_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - chatnet
-
   backend:
     build: ./backend
     container_name: chat_backend
     restart: unless-stopped
-    depends_on:
-      - postgres
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       PORT: 3001
-    networks:
-      - chatnet
+      DB_PATH: /data/chat.db
     volumes:
       - chat_data:/data
+    networks:
+      - chatnet
 
   frontend:
     build: ./frontend
@@ -40,7 +23,6 @@ services:
       - chatnet
 
 volumes:
-  postgres_data:
   chat_data:
 
 networks:
