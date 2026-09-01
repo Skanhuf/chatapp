@@ -17,10 +17,15 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Backend lint
+      - name: Download Go modules
         run: |
           cd backend
           go mod tidy
+          go mod download
+
+      - name: Backend lint
+        run: |
+          cd backend
           go vet ./...
 
   build:
