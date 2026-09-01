@@ -12,7 +12,6 @@ from database.db import Base, get_db
 TEST_DB_PATH = tempfile.mktemp(suffix=".db")
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
-# Single shared engine for all fixtures
 _engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 _test_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -26,18 +25,25 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_db():
-    """Create tables once for the entire test session."""
+    """Create tables on the engine's connection before any tests run."""
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
+    # Cleanup
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
 async def session():
-    """Use the same engine as setup_db."""
+    """
+    Use the same engine as setup_db.
+    The key: connect first, THEN create tables on this connection,
+    THEN start the transaction.
+    """
     async with _engine.connect() as conn:
+        # Create tables on THIS connection before starting transaction
+        await conn.run_sync(Base.metadata.create_all)
         txn = await conn.begin()
         s = _test_session(bind=conn)
         try:
