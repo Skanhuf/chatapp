@@ -14,7 +14,7 @@ class MessageRepository:
         await self.db.refresh(message)
         return message
 
-    async def get_by_chat_id(self, chat_id: int, limit: int = 50, offset: int = 0) -> list[Message]:
+    async def get_by_chat_id(self, chat_id: int, limit: int = 50, offset: int = 0) -> list[tuple[Message, str | None]]:
         stmt = (
             select(Message, User)
             .join(User, Message.user_id == User.id)
@@ -25,24 +25,16 @@ class MessageRepository:
         )
         result = await self.db.execute(stmt)
         rows = result.all()
-        # Build messages with username from joined user
+        # Build list of (Message, username) tuples
         messages = []
         for msg_row, user_row in rows:
-            msg = Message(
-                id=msg_row.id,
-                chat_id=msg_row.chat_id,
-                user_id=msg_row.user_id,
-                content=msg_row.content,
-                file_url=msg_row.file_url,
-                created_at=msg_row.created_at,
-            )
-            msg.username = user_row.username if user_row else None
-            messages.append(msg)
+            username = user_row.username if user_row else None
+            messages.append((msg_row, username))
         # Reverse to get oldest first
         messages.reverse()
         return messages
 
-    async def search(self, chat_id: int, query: str) -> list[Message]:
+    async def search(self, chat_id: int, query: str) -> list[tuple[Message, str | None]]:
         like_query = f"%{query}%"
         stmt = (
             select(Message, User)
@@ -56,14 +48,6 @@ class MessageRepository:
         rows = result.all()
         messages = []
         for msg_row, user_row in rows:
-            msg = Message(
-                id=msg_row.id,
-                chat_id=msg_row.chat_id,
-                user_id=msg_row.user_id,
-                content=msg_row.content,
-                file_url=msg_row.file_url,
-                created_at=msg_row.created_at,
-            )
-            msg.username = user_row.username if user_row else None
-            messages.append(msg)
+            username = user_row.username if user_row else None
+            messages.append((msg_row, username))
         return messages

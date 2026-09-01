@@ -31,14 +31,14 @@ async def get_messages(
     chat_repo = ChatRepository(db)
     message_service = MessageService(message_repo, chat_repo)
 
-    messages = await message_service.get_messages(chat_id, limit, offset)
+    msg_tuples = await message_service.get_messages(chat_id, limit, offset)
     return [
         MessageResponse(
-            id=m.id, chat_id=m.chat_id, user_id=m.user_id,
-            content=m.content, file_url=m.file_url,
-            created_at=m.created_at, username=m.user.username if m.user else None
+            id=msg.id, chat_id=msg.chat_id, user_id=msg.user_id,
+            content=msg.content, file_url=msg.file_url,
+            created_at=msg.created_at, username=username
         )
-        for m in messages
+        for msg, username in msg_tuples
     ]
 
 
@@ -66,5 +66,5 @@ async def send_message(
     return MessageResponse(
         id=saved_msg.id, chat_id=saved_msg.chat_id, user_id=saved_msg.user_id,
         content=saved_msg.content, file_url=saved_msg.file_url,
-        created_at=saved_msg.created_at, username=saved_msg.user.username if saved_msg.user else None
+        created_at=saved_msg.created_at, username=None
     )

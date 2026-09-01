@@ -57,6 +57,3 @@ class Message(Base):
 
     user = relationship("User", back_populates="messages", foreign_keys="Message.user_id")
     chat = relationship("Chat", back_populates="messages", foreign_keys="Message.chat_id")
-
-    # Denormalized field for quick access to username
-    username: str | None = None

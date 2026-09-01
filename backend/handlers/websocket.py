@@ -52,8 +52,7 @@ class WebSocketHandler:
 
         # Get username
         user = await self.chat_service.get_user_by_id(user_id)
-        if user:
-            msg.username = user.username
+        username = user.username if user else None
 
         # Serialize and broadcast
         data = json.dumps({
@@ -63,6 +62,6 @@ class WebSocketHandler:
             "content": msg.content,
             "file_url": msg.file_url,
             "created_at": msg.created_at.isoformat() if msg.created_at else None,
-            "username": msg.username
+            "username": username
         })
         self.hub.add_broadcast(chat_id, data.encode("utf-8"))
