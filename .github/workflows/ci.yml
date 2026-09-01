@@ -90,4 +90,4 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-          ssh root@${{ secrets.DEPLOY_HOST }} "cd ~/ChatAPP && git pull origin main && docker compose up -d --build"
+          ssh shogan@${{ secrets.DEPLOY_HOST }} "sudo bash -c 'cd ~/ChatAPP && git pull origin main && docker compose up -d --build'"
