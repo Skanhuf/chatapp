@@ -24,7 +24,7 @@ async def setup_db():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def session():
+async def session(setup_db):
     """Provide a session with rollback (per-test, new connection)."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
     async with engine.connect() as conn:
