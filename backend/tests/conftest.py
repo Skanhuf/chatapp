@@ -1,7 +1,5 @@
 import pytest
 import pytest_asyncio
-import asyncio
-import tempfile
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
@@ -9,23 +7,16 @@ from main import app
 from database.db import Base, get_db
 
 
-TEST_DB_PATH = tempfile.mktemp(suffix=".db")
-TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
+# PostgreSQL test database
+TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/chatapp_test"
 
 _engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 _test_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_db():
-    """Create tables on the engine's connection before any tests run."""
+    """Create tables once for the entire test session."""
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -36,21 +27,14 @@ async def setup_db():
 
 @pytest_asyncio.fixture
 async def session():
-    """
-    Use the same engine as setup_db.
-    The key: connect first, THEN create tables on this connection,
-    THEN start the transaction.
-    """
+    """Provide a session with rollback."""
     async with _engine.connect() as conn:
-        # Create tables on THIS connection before starting transaction
-        await conn.run_sync(Base.metadata.create_all)
-        txn = await conn.begin()
+        await conn.begin()
         s = _test_session(bind=conn)
         try:
             yield s
         finally:
             await s.close()
-            await txn.rollback()
 
 
 @pytest_asyncio.fixture

@@ -20,8 +20,22 @@ lint-backend:
 test-backend:
   stage: test
   image: python:3.12-slim
+  services:
+    - name: postgres:16-alpine
+      alias: postgres-test
+  variables:
+    PGPASSWORD: postgres
+    POSTGRES_HOST: postgres-test
+    POSTGRES_USER: postgres
+    DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres-test:5432/chatapp_test"
   before_script:
     - cd backend && pip install --no-cache-dir -r requirements.txt
+    - |
+      # Wait for PostgreSQL to be ready
+      until pg_isready -h postgres-test -p 5432 -U postgres; do
+        sleep 1
+      done
+      createdb -h postgres-test -U postgres chatapp_test
   script:
     - cd backend && pytest tests/ -v
   rules:
