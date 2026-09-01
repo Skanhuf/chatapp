@@ -8,37 +8,33 @@ from main import app
 # PostgreSQL test database
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/chatapp_test"
 
-# Use pool_size=1 to prevent concurrent connection conflicts
-_test_engine = create_async_engine(
-    TEST_DATABASE_URL,
-    echo=False,
-    pool_size=1,
-    max_overflow=0,
-    pool_pre_ping=True,
-)
+# Single engine for setup (session-scoped)
+_setup_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_db():
     """Create tables once for the entire test session."""
-    async with _test_engine.begin() as conn:
+    async with _setup_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
     # Cleanup
-    async with _test_engine.begin() as conn:
+    async with _setup_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture(scope="function")
 async def session():
-    """Provide a session with rollback (per-test, isolated connection)."""
-    async with _test_engine.connect() as conn:
+    """Provide a session with rollback (per-test, new connection)."""
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    async with engine.connect() as conn:
         async with conn.begin():
             s = async_sessionmaker(conn, class_=AsyncSession, expire_on_commit=False)()
             try:
                 yield s
             finally:
                 await s.close()
+    await engine.dispose()
 
 
 @pytest_asyncio.fixture(scope="function")
