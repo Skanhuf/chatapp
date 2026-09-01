@@ -9,13 +9,12 @@ from main import app
 from database.db import Base, get_db
 
 
-# Use a temp SQLite file for testing
 TEST_DB_PATH = tempfile.mktemp(suffix=".db")
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
-# Single engine shared across all fixtures
+# Single shared engine for all fixtures
 _engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-_test_sessionmaker = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
+_test_session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture(scope="session")
@@ -31,21 +30,20 @@ async def setup_db():
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Cleanup after all tests
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
 async def session():
-    """Provide a transactional rollback and yield a session."""
+    """Use the same engine as setup_db."""
     async with _engine.connect() as conn:
         txn = await conn.begin()
-        session = _test_sessionmaker(bind=conn)
+        s = _test_session(bind=conn)
         try:
-            yield session
+            yield s
         finally:
-            await session.close()
+            await s.close()
             await txn.rollback()
 
 
@@ -66,7 +64,6 @@ async def client(session):
 
 @pytest_asyncio.fixture
 async def test_user(session):
-    """Create a test user and return it."""
     import bcrypt
     from models.models import User
 
@@ -85,7 +82,6 @@ async def test_user(session):
 
 @pytest_asyncio.fixture
 async def test_user_pending(session):
-    """Create a pending test user."""
     import bcrypt
     from models.models import User
 
@@ -104,7 +100,6 @@ async def test_user_pending(session):
 
 @pytest_asyncio.fixture
 async def another_user(session):
-    """Create another test user."""
     import bcrypt
     from models.models import User
 
