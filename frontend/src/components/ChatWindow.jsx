@@ -31,11 +31,15 @@ export default function ChatWindow({ chat, ws }) {
 
     // Send via WebSocket
     if (ws) {
-      ws.send(JSON.stringify({
-        type: 'message',
-        chat_id: chat.id,
-        content: newMessage
-      }))
+      try {
+        ws.send(JSON.stringify({
+          type: 'message',
+          chat_id: chat.id,
+          content: newMessage
+        }))
+      } catch (e) {
+        console.log('WebSocket not connected')
+      }
     }
 
     // Also save via API
@@ -58,7 +62,7 @@ export default function ChatWindow({ chat, ws }) {
       }}>
         <h3>{chat.name}</h3>
         <p style={{ fontSize: '12px', color: '#666' }}>
-          {members.length} members
+          {(members || []).length} members
         </p>
       </div>
 
