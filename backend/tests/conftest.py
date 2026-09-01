@@ -4,13 +4,11 @@ import tempfile
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
 
 from main import app
 
-# Import Base directly from models to avoid importing database.db (which creates PG engine)
+# Import Base from models to avoid importing database.db (which creates PG engine)
 from models.models import Base, Chat, ChatMember, Message, User  # noqa: F401
-
 
 # Use a temp file for SQLite so all connections share the same DB
 _TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "chatapp_test.db")
@@ -19,13 +17,12 @@ TEST_DATABASE_URL = f"sqlite+aiosqlite:///{_TEST_DB_PATH}"
 _test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_db():
-    """Create tables once for the entire test session."""
+    """Create and drop tables for each test to ensure isolation."""
     async with _test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Cleanup
     async with _test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
@@ -33,10 +30,12 @@ async def setup_db():
 @pytest_asyncio.fixture(scope="function")
 async def session(setup_db):
     """Provide a session with rollback (per-test, new connection)."""
-    async with _test_engine.connect() as conn, conn.begin():
+    async with _test_engine.connect() as conn:
+        await conn.begin()
         s = async_sessionmaker(conn, class_=AsyncSession, expire_on_commit=False)()
         try:
             yield s
+            await s.rollback()
         finally:
             await s.close()
 
