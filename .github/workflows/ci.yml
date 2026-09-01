@@ -62,11 +62,6 @@ jobs:
             sleep 1
           done
 
-      - name: Create test database
-        run: |
-          cd backend
-          PGPASSWORD=postgres createdb -h localhost -U postgres chatapp_test
-
       - name: Run tests
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/chatapp_test
