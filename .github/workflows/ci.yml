@@ -17,12 +17,6 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Go mod tidy
-        run: |
-          cd backend
-          go get ./...
-          go mod tidy
-
       - name: Go mod download
         run: |
           cd backend
