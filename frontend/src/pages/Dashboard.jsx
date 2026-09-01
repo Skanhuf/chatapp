@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [selectedUsers, setSelectedUsers] = useState([])
   const wsRef = useRef(null)
 
+  if (!user) return <div style={{padding: '50px', textAlign: 'center'}}>Loading...</div>
+
   useEffect(() => {
     fetchChats()
     fetchUsers()
@@ -23,18 +25,23 @@ export default function Dashboard() {
   }, [])
 
   const connectWebSocket = () => {
-    const ws = new WebSocket(`${window.location.origin}/ws?userId=${user.id}`)
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data)
-      if (msg.type === 'message') {
-        setChats(prev => prev.map(chat =>
-          chat.id === msg.chat_id
-            ? { ...chat, lastMessage: msg.content }
-            : chat
-        ))
+    try {
+      const ws = new WebSocket(`ws://${window.location.host}/ws?userId=${user.id}`)
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data)
+        if (msg.type === 'message') {
+          setChats(prev => prev.map(chat =>
+            chat.id === msg.chat_id
+              ? { ...chat, lastMessage: msg.content }
+              : chat
+          ))
+        }
       }
+      ws.onerror = () => console.log('WebSocket error')
+      wsRef.current = ws
+    } catch (e) {
+      console.log('WebSocket not available')
     }
-    wsRef.current = ws
   }
 
   const fetchChats = async () => {
