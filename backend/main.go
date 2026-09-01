@@ -18,8 +18,13 @@ func main() {
 		port = "3001"
 	}
 
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "/data/chat.db"
+	}
+
 	// Initialize database
-	db, err := repository.NewDatabase(os.Getenv("DB_PATH"))
+	db, err := repository.NewDatabase(dbPath)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -38,6 +43,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
 	chatHandler := handler.NewChatHandler(chatService, messageService, userRepo)
+	messageHandler := handler.NewMessageHandler(messageService)
 	wsHandler := handler.NewWebSocketHandler(chatService, messageService, userRepo)
 
 	// Setup router
@@ -74,7 +80,7 @@ func main() {
 		api.GET("/chats", chatHandler.GetChats)
 		api.POST("/chats", chatHandler.CreateChat)
 		api.POST("/chats/direct", chatHandler.CreateDirectChat)
-		api.POST("/chats/groups", chatHandler.CreateGroup)
+		api.POST("/chats/groups", chatHandler.CreateChat)
 		api.GET("/chats/:id/members", chatHandler.GetChatMembers)
 		api.POST("/chats/:id/members", chatHandler.AddMember)
 		api.DELETE("/chats/:id/members/:userId", chatHandler.RemoveMember)

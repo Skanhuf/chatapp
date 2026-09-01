@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"chatapp/internal/model"
 	"chatapp/internal/service"
 	"net/http"
 	"strconv"
@@ -9,17 +10,17 @@ import (
 )
 
 type ChatHandler struct {
-	chatService   *service.ChatService
+	chatService    *service.ChatService
 	messageService *service.MessageService
 	userRepo       interface {
-		GetPending() ([]*User, error)
+		GetPending() ([]*model.User, error)
 		Approve(id int) error
 		Block(id int) error
 	}
 }
 
 func NewChatHandler(chatService *service.ChatService, messageService *service.MessageService, userRepo interface {
-	GetPending() ([]*User, error)
+	GetPending() ([]*model.User, error)
 	Approve(id int) error
 	Block(id int) error
 }) *ChatHandler {
@@ -59,6 +60,47 @@ func (h *ChatHandler) CreateChat(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, chat)
+}
+
+func (h *ChatHandler) CreateGroup(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	var req CreateChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	chat, err := h.chatService.CreateChat(req.Name, userID, req.MemberIDs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, chat)
+}
+
+func (h *ChatHandler) LeaveChat(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	chatID, _ := strconv.Atoi(c.Param("id"))
+	if err := h.chatService.RemoveMember(chatID, userID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Left chat"})
+}
+
+func (h *ChatHandler) RemoveMember(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	chatID, _ := strconv.Atoi(c.Param("id"))
+	memberID, _ := strconv.Atoi(c.Param("userId"))
+	if userID == memberID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot leave your own chat"})
+		return
+	}
+	if err := h.chatService.RemoveMember(chatID, memberID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Member removed"})
 }
 
 func (h *ChatHandler) CreateDirectChat(c *gin.Context) {

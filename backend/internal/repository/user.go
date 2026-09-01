@@ -8,6 +8,49 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+func NewDatabase(path string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create tables
+	db.Exec(`CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT UNIQUE NOT NULL,
+		email TEXT NOT NULL,
+		password_hash TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'pending',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS chats (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		created_by INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS chat_members (
+		chat_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		role TEXT NOT NULL DEFAULT 'member',
+		PRIMARY KEY (chat_id, user_id)
+	)`)
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS messages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		chat_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		content TEXT NOT NULL,
+		file_url TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+
+	return db, nil
+}
+
 type UserRepository struct {
 	db *sql.DB
 }
