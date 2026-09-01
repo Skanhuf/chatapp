@@ -85,9 +85,16 @@ class TestAuthProfile:
         assert data["username"] == "testuser"
         assert data["status"] == "approved"
 
-    async def test_get_me_unauthorized(self, client: AsyncClient):
-        response = await client.get("/api/auth/me")
-        assert response.status_code == 401
+    async def test_get_me_unauthorized(self):
+        """Test that unauthenticated requests return 401."""
+        from httpx import ASGITransport, AsyncClient
+
+        from main import app
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.get("/api/auth/me")
+            assert response.status_code == 401
 
     async def test_update_profile(self, client: AsyncClient, test_user):
         response = await client.put("/api/auth/profile", json={

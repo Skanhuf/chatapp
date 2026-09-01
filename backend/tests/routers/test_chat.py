@@ -23,6 +23,13 @@ class TestChatCreate:
         assert "chat_id" in data
 
     async def test_get_chats(self, client: AsyncClient, test_user, another_user):
+        # Create a chat first
+        create_resp = await client.post("/api/chats", json={
+            "name": "Test Group",
+            "member_ids": [another_user.id]
+        })
+        assert create_resp.status_code == 201
+
         response = await client.get("/api/chats")
         assert response.status_code == 200
         data = response.json()
